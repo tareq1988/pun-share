@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+***********************************************************************
+
+	Copyright (C) 2008  PunBB
+
+	PunBB is free software; you can redistribute it and/or modify it
+	under the terms of the GNU General Public License as published
+	by the Free Software Foundation; either version 2 of the License,
+	or (at your option) any later version.
+
+	PunBB is distributed in the hope that it will be useful, but
+	WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+	MA  02111-1307  USA
+
+***********************************************************************
+-->
+
+<extension engine="1.0">
+	<id>share</id>
+	<title>Post Share</title>
+	<version>0.1</version>
+	<description>Share to twitter and facebook</description>
+	<author>Tareq (http://tareq.weDevs.com)</author>
+
+	<minversion>1.3</minversion>
+	<maxtestedon>1.3.2</maxtestedon>
+	
+	<install><![CDATA[
+				
+		$query = array(
+			'INSERT'	=> 'conf_name, conf_value',
+			'INTO'		=> 'config',
+			'VALUES'	=> array(
+				"'o_share_fb','Share'",
+				"'o_share_twitter_bt',''",
+				"'o_share_twitter','RT @ :'"
+			)
+		);
+		
+		$forum_db->query_build($query) or error(__FILE__, __LINE__);
+		
+	]]></install>
+
+	<uninstall><![CDATA[
+
+		// Delete extension options from config
+		$query = array(
+			'DELETE'	=> 'config',
+			'WHERE'		=> "conf_name in ('o_share_fb','o_share_twitter_bt','o_share_twitter')");
+
+		$forum_db->query_build($query) or error(__FILE__, __LINE__);
+		
+	]]></uninstall>
+	
+	<hooks>
+	
+		<hook id="hd_head"><![CDATA[
+			if (FORUM_PAGE == 'viewtopic')
+			{
+				$forum_head['post-share']	= '<style type="text/css">.post-share{float:right; font-weight: normal; margin-right: 10px;} .post-share span{font: 10px Helvetica,Arial; color: #fff;}  </style>';
+				$forum_head['commonjs']		= '<script src="http://static.ak.fbcdn.net/connect.php/js/FB.Share" type="text/javascript"></script><script src="'.$ext_info["path"].'/retweet.js"></script><script type="text/javascript" src="http://www.google.com/buzz/api/button.js"></script>';
+			}
+		]]></hook>
+	
+		<hook id="vt_row_pre_post_ident_merge"><![CDATA[
+			$forum_page['post_ident']['share'] = '<span class="post-share"><a title="Google Buzz-এ পোস্ট করুন" class="google-buzz-button" href="http://www.google.com/buzz/post" data-button-style="small-button" data-locale="bn"></a> <a class="retweet" target="_blank" title="'.$forum_config['o_share_twitter'].' '.$cur_topic['subject'].'" href="'.forum_link($forum_url['post'], $cur_post['id']).'"></a> <a name="fb_share" type="button_count" share_url="'.forum_link($forum_url['post'], $cur_post['id']).'">'.$forum_config['o_share_fb'].'</a>';
+		
+		]]></hook>
+		
+		<hook id="aop_features_sig_fieldset_end"><![CDATA[
+			
+		?>
+			<div class="content-head">
+				<h2 class="hn">
+					<span>Share</span>
+				</h2>
+			</div>
+
+			<fieldset class="frm-group group1">
+				<div class="sf-set set<?php echo ++$forum_page['item_count'] ?>">
+					<div class="sf-box text">
+						<span class="fld-input">
+							<input id="fld<?php echo ++$forum_page['fld_count'] ?>" type="text" value="<?php echo $forum_config['o_share_fb']; ?>" maxlength="50" size="30" name="form[share_fb]"/><br />
+						</span>
+						<label for="fld<?php echo $forum_page['fld_count'] ?>">
+							<span>Facebook Button Name</span>
+						</label>
+					</div>
+
+					<div class="sf-box text">
+						<span class="fld-input">
+							<input id="fld<?php echo ++$forum_page['fld_count'] ?>" type="text" value="<?php echo $forum_config['o_share_twitter']; ?>" maxlength="50" size="30" name="form[share_twitter]"/><br />
+						</span>
+						<label for="fld<?php echo $forum_page['fld_count'] ?>">
+							<span>Twitter Share</span>
+						</label>
+					</div>					
+				</div>
+			</fieldset>
+		<?php	
+		]]></hook>
+		
+	</hooks>
+</extension>
